@@ -1,0 +1,61 @@
+# Maakt elke maand de Drivr-limiettegels uit OpenStreetMap en zet ze op GitHub Pages.
+# Draait volledig in de cloud; niets op je eigen computer.
+name: Limiettegels
+
+on:
+  schedule:
+    - cron: "0 4 3 * *"        # elke maand op de 3e om 04:00 UTC
+  workflow_dispatch: {}         # of met de hand starten via het tabblad Actions
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: pyosmium installeren
+        run: pip install "osmium>=4,<5"
+
+      - name: Kaarten downloaden (Geofabrik)
+        run: |
+          mkdir -p osm
+          curl -fsSL -o osm/nl.osm.pbf https://download.geofabrik.de/europe/netherlands-latest.osm.pbf
+          curl -fsSL -o osm/be.osm.pbf https://download.geofabrik.de/europe/belgium-latest.osm.pbf
+          ls -lh osm
+
+      - name: Tegels maken
+        run: python make_tiles.py site nl=osm/nl.osm.pbf be=osm/be.osm.pbf
+
+      - name: Startpagina en vermelding
+        run: |
+          cp README.md site/README.md
+          printf '<!doctype html><meta charset="utf-8"><title>Drivr limieten</title><p>Snelheidslimieten voor de Drivr-app. Data: &copy; OpenStreetMap-bijdragers, ODbL.</p>' > site/index.html
+          du -sh site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
