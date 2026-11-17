@@ -19,7 +19,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 330
     steps:
       - uses: actions/checkout@v4
 
@@ -27,24 +27,49 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: pyosmium installeren
-        run: pip install "osmium>=4,<5"
+      - name: Gereedschap installeren
+        run: |
+          pip install "osmium>=4,<5"
+          sudo apt-get update -q && sudo apt-get install -y -q osmium-tool
 
-      - name: Kaarten downloaden (Geofabrik)
+      # Per kaart: downloaden, alleen wegen met een limiet bewaren, het grote bestand meteen weggooien.
+      # Zo blijven schijf en geheugen klein, ook voor Duitsland en Frankrijk.
+      - name: Kaarten downloaden en voorfilteren (Geofabrik)
         run: |
           mkdir -p osm
-          curl -fsSL -o osm/nl.osm.pbf https://download.geofabrik.de/europe/netherlands-latest.osm.pbf
-          curl -fsSL -o osm/be.osm.pbf https://download.geofabrik.de/europe/belgium-latest.osm.pbf
-          ls -lh osm
+          get() {   # get <naam> <geofabrik-pad>
+            curl -fsSL -o osm/raw.pbf "https://download.geofabrik.de/europe/$2-latest.osm.pbf"
+            osmium tags-filter osm/raw.pbf \
+              w/highway=motorway,trunk,primary,secondary,tertiary,unclassified,residential,living_street,service,road,motorway_link,trunk_link,primary_link,secondary_link,tertiary_link \
+              -o osm/roads.pbf --overwrite
+            osmium tags-filter osm/roads.pbf w/maxspeed w/maxspeed:type w/source:maxspeed w/zone:maxspeed \
+              -o "osm/$1.pbf" --overwrite
+            rm -f osm/raw.pbf osm/roads.pbf
+            ls -lh "osm/$1.pbf"
+          }
+          get nl netherlands
+          get be belgium
+          get de germany
+          get fr france
+          get es spain
+          get gb great-britain
+          get ie ireland-and-northern-ireland
+          df -h .
 
       - name: Tegels maken
-        run: python make_tiles.py site nl=osm/nl.osm.pbf be=osm/be.osm.pbf
+        run: |
+          python make_tiles.py site nl=osm/nl.pbf be=osm/be.pbf de=osm/de.pbf fr=osm/fr.pbf es=osm/es.pbf \
+            uk=osm/gb.pbf uk=osm/ie.pbf
 
       - name: Startpagina en vermelding
         run: |
           cp README.md site/README.md
           printf '<!doctype html><meta charset="utf-8"><title>Drivr limieten</title><p>Snelheidslimieten voor de Drivr-app. Data: &copy; OpenStreetMap-bijdragers, ODbL.</p>' > site/index.html
           du -sh site
+          # GitHub Pages staat maximaal 1 GB toe
+          size=$(du -sm site | cut -f1)
+          echo "Totaal: ${size} MB"
+          if [ "$size" -gt 980 ]; then echo "::error::Tegels zijn ${size} MB, meer dan GitHub Pages toestaat (1 GB)"; exit 1; fi
 
       - uses: actions/upload-pages-artifact@v3
         with:
