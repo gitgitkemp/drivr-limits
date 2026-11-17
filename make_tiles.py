@@ -42,8 +42,13 @@ ZONES = {
     "DK:urban": 50, "DK:rural": 80, "DK:motorway": 130,
     "IT:urban": 50, "IT:rural": 90, "IT:motorway": 130,
     "ES:urban": 50, "ES:rural": 90, "ES:motorway": 120,
-    "GB:nsl_single": 96.56, "GB:nsl_dual": 112.65, "GB:motorway": 112.65,
+    "GB:nsl_single": 96.56, "GB:nsl_dual": 112.65, "GB:motorway": 112.65, "GB:nsl_restricted": 48.28,
+    "IE:urban": 50, "IE:rural": 80, "IE:regional": 80, "IE:national": 100, "IE:motorway": 120,
+    "ES:trunk": 100, "FR:trunk": 110,
 }
+
+# Punten weglaten die minder dan zoveel meter van de lijn afwijken (scheelt veel ruimte, niet zichtbaar).
+SIMPLIFY_M = 2.0
 
 
 def parse(raw):
@@ -100,6 +105,32 @@ def encode_points(points):
     return raw
 
 
+def simplify(points, tol_m=SIMPLIFY_M):
+    """Douglas-Peucker in meters (vlakke benadering, ruim goed genoeg op een paar kilometer)."""
+    if len(points) < 3:
+        return points
+    k = math.cos(math.radians(points[0][0]))
+    xy = [(lo * 111_320 * k, la * 110_574) for la, lo in points]
+    keep = [False] * len(points)
+    keep[0] = keep[-1] = True
+    stack = [(0, len(points) - 1)]
+    while stack:
+        a, b = stack.pop()
+        (ax, ay), (bx, by) = xy[a], xy[b]
+        dx, dy = bx - ax, by - ay
+        L = math.hypot(dx, dy)
+        worst, idx = 0.0, -1
+        for i in range(a + 1, b):
+            px, py = xy[i]
+            d = abs(dy * (px - ax) - dx * (py - ay)) / L if L > 0 else math.hypot(px - ax, py - ay)
+            if d > worst:
+                worst, idx = d, i
+        if worst > tol_m:
+            keep[idx] = True
+            stack += [(a, idx), (idx, b)]
+    return [p for p, k_ in zip(points, keep) if k_]
+
+
 def split_per_tile(points):
     """Knip een weg in stukken per tegel. Een stuk dat over een tegelgrens gaat, komt in beide tegels."""
     pieces = defaultdict(list)          # tegel -> lijst van polylijnen
@@ -114,18 +145,17 @@ def split_per_tile(points):
 
 
 def build(out, sources):
-    """sources: lijst van (land, pad-naar-pbf)."""
+    """sources: lijst van (land, pad-naar-pbf). Land voor land, zodat het geheugen klein blijft."""
     import osmium  # pas hier, zodat --selftest zonder pyosmium werkt
     from datetime import date
 
-    tiles = defaultdict(list)
-    tile_countries = defaultdict(set)
     stats = {"wegen": 0, "zonder_limiet": 0}
+    country_tiles = defaultdict(set)
 
     class Handler(osmium.SimpleHandler):
-        def __init__(self, country):
+        def __init__(self, tiles):
             super().__init__()
-            self.country = country
+            self.tiles = tiles
 
         def way(self, w):
             tags = w.tags
@@ -143,35 +173,39 @@ def build(out, sources):
                 return
             stats["wegen"] += 1
             name = tags.get("name") or tags.get("ref") or ""
-            for t, runs in split_per_tile(pts).items():
-                tile_countries[t].add(self.country)
+            for t, runs in split_per_tile(simplify(pts)).items():
                 for run in runs:
-                    tiles[t].append([round(limit), name, encode_points(run)])
+                    # Als tekst bewaren: veel zuiniger met geheugen dan geneste lijsten.
+                    self.tiles[t].add(json.dumps([round(limit), name, encode_points(run)],
+                                                 ensure_ascii=False, separators=(",", ":")))
 
     for country, pbf in sources:
-        # Grensgebieden zitten in beide extracten: dubbele wegen per tegel wegfilteren gebeurt hieronder.
-        Handler(country).apply_file(pbf, locations=True, idx="flex_mem")
-
-    per_country = defaultdict(lambda: {"tiles": [], "bytes": 0})
-    for (x, y), ways in tiles.items():
-        unique = list({json.dumps(w, separators=(",", ":")): w for w in ways}.values())
-        d = os.path.join(out, str(ZOOM), str(x))
-        os.makedirs(d, exist_ok=True)
-        body = json.dumps({"v": 1, "w": unique}, ensure_ascii=False, separators=(",", ":"))
-        with open(os.path.join(d, f"{y}.json"), "w", encoding="utf-8") as f:
-            f.write(body)
-        for c in tile_countries[(x, y)]:
-            per_country[c]["tiles"].append(f"{ZOOM}/{x}/{y}")
-            per_country[c]["bytes"] += len(body.encode("utf-8"))
+        tiles = defaultdict(set)
+        Handler(tiles).apply_file(pbf, locations=True, idx="flex_mem")
+        for (x, y), ways in tiles.items():
+            d = os.path.join(out, str(ZOOM), str(x))
+            os.makedirs(d, exist_ok=True)
+            path = os.path.join(d, f"{y}.json")
+            if os.path.exists(path):   # grensgebied: al gevuld door een ander land, samenvoegen
+                with open(path, encoding="utf-8") as f:
+                    ways |= {json.dumps(w, ensure_ascii=False, separators=(",", ":")) for w in json.load(f)["w"]}
+            with open(path, "w", encoding="utf-8") as f:
+                f.write('{"v":1,"w":[' + ",".join(sorted(ways)) + "]}")
+            country_tiles[country].add(f"{ZOOM}/{x}/{y}")
+        print(country, len(tiles), "tegels", flush=True)
+        del tiles
 
     os.makedirs(os.path.join(out, "index"), exist_ok=True)
     today = date.today().isoformat()
-    for c, info in per_country.items():
-        info["tiles"].sort()
+    total = set()
+    for c, paths in country_tiles.items():
+        paths = sorted(paths)
+        total |= set(paths)
+        size = sum(os.path.getsize(os.path.join(out, p + ".json")) for p in paths)
         with open(os.path.join(out, "index", f"{c}.json"), "w", encoding="utf-8") as f:
-            json.dump({"land": c, "datum": today, "bytes": info["bytes"], "tiles": info["tiles"]}, f, separators=(",", ":"))
-    meta = {"zoom": ZOOM, "datum": today, "tegels": len(tiles), **stats,
-            "landen": {c: len(i["tiles"]) for c, i in per_country.items()},
+            json.dump({"land": c, "datum": today, "bytes": size, "tiles": paths}, f, separators=(",", ":"))
+    meta = {"zoom": ZOOM, "datum": today, "tegels": len(total), **stats,
+            "landen": {c: len(p) for c, p in country_tiles.items()},
             "licentie": "© OpenStreetMap-bijdragers, ODbL"}
     with open(os.path.join(out, "meta.json"), "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=1)
@@ -198,6 +232,12 @@ def selftest():
     east = (x + 1) / 8192 * 360 - 180
     pieces = split_per_tile([(52.3731, east - 0.001), (52.3731, east + 0.001)])
     assert set(pieces) == {(x, y), (x + 1, y)}, pieces
+    # Vereenvoudigen: rechte lijn met kleine ruis wordt twee punten, een echte bocht blijft
+    straight = [(52.0 + i * 0.0001, 4.0 + (0.000005 if i % 2 else 0)) for i in range(20)]
+    assert len(simplify(straight)) == 2, simplify(straight)
+    corner = [(52.0, 4.0), (52.001, 4.0), (52.001, 4.0015)]
+    assert simplify(corner) == corner
+    assert parse("IE:national") == 100
     print("selftest ok")
 
 
