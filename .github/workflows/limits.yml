@@ -52,7 +52,7 @@ jobs:
     timeout-minutes: 240
     strategy:
       fail-fast: false
-      max-parallel: 8           # rustig voor de servers van Geofabrik
+      max-parallel: 4           # rustig voor de servers van Geofabrik (twee repo's tegelijk)
       matrix:
         region: ${{ fromJSON(needs.plan.outputs.regions) }}
     steps:
@@ -72,7 +72,7 @@ jobs:
           n=0
           for path in ${{ matrix.region.pbf }}; do
             n=$((n+1))
-            curl -fsSL --retry 3 -o osm/raw.pbf "https://download.geofabrik.de/$path-latest.osm.pbf"
+            curl -fsSL --retry 8 --retry-all-errors --retry-delay 45 -o osm/raw.pbf "https://download.geofabrik.de/$path-latest.osm.pbf"
             osmium tags-filter osm/raw.pbf \
               w/highway=motorway,trunk,primary,secondary,tertiary,unclassified,residential,living_street,service,road,motorway_link,trunk_link,primary_link,secondary_link,tertiary_link \
               -o osm/roads.pbf --overwrite
