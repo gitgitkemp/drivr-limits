@@ -113,9 +113,9 @@ jobs:
           python3 make_tiles.py merge site packs regions.json "${{ needs.plan.outputs.site }}" parts
           cp README.md site/README.md
           printf '<!doctype html><meta charset="utf-8"><title>Drivr limieten</title><p>Snelheidslimieten voor de Drivr-app. Data: &copy; OpenStreetMap-bijdragers, ODbL.</p>' > site/index.html
-          du -sh site packs
-          # GitHub Pages staat maximaal 1 GB toe
-          size=$(du -sm site | cut -f1)
+          du -sh --apparent-size site packs
+          # GitHub Pages staat maximaal 1 GB toe (echte bestandsgrootte, niet de ruimte op schijf)
+          size=$(du -sm --apparent-size site | cut -f1)
           echo "Totaal: ${size} MB"
           if [ "$size" -gt 980 ]; then echo "::error::Tegels zijn ${size} MB, meer dan GitHub Pages toestaat (1 GB)"; exit 1; fi
 
