@@ -1,14 +1,20 @@
 # Maakt elke maand de Drivr-limiettegels uit OpenStreetMap en zet ze op GitHub Pages.
-# Draait volledig in de cloud; niets op je eigen computer.
+# Draait volledig in de cloud. Dezelfde workflow staat in elke limiet-repo; welke regio's
+# een repo bouwt, staat in regions.json (veld "site").
 name: Limiettegels
 
 on:
   schedule:
     - cron: "0 4 3 * *"        # elke maand op de 3e om 04:00 UTC
-  workflow_dispatch: {}         # of met de hand starten via het tabblad Actions
+  workflow_dispatch:            # of met de hand starten via het tabblad Actions
+    inputs:
+      only:
+        description: "Alleen deze regio's (komma's, bijv. lu,mc) en niets publiceren; leeg = alles"
+        required: false
+        default: ""
 
 permissions:
-  contents: read
+  contents: write               # downloadbestanden als release
   pages: write
   id-token: write
 
@@ -17,66 +23,125 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 330
+    outputs:
+      site: ${{ steps.p.outputs.site }}
+      regions: ${{ steps.p.outputs.regions }}
     steps:
       - uses: actions/checkout@v4
+      - id: p
+        env:
+          ONLY: ${{ inputs.only }}
+        run: |
+          python3 - <<'EOF' >> "$GITHUB_OUTPUT"
+          import json, os
+          cfg = json.load(open("regions.json"))
+          repo = os.environ["GITHUB_REPOSITORY"].split("/")[1]
+          site = next(k for k, v in cfg["sites"].items() if v == repo)
+          only = [x.strip() for x in os.environ.get("ONLY", "").split(",") if x.strip()]
+          regions = [{"id": r["id"], "pbf": " ".join(r["pbf"])} for r in cfg["regions"]
+                     if r["site"] == site and (not only or r["id"] in only)]
+          print("site=" + site)
+          print("regions=" + json.dumps(regions))
+          EOF
 
+  region:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      max-parallel: 8           # rustig voor de servers van Geofabrik
+      matrix:
+        region: ${{ fromJSON(needs.plan.outputs.regions) }}
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Gereedschap installeren
         run: |
           pip install "osmium>=4,<5"
           sudo apt-get update -q && sudo apt-get install -y -q osmium-tool
 
-      # Per kaart: downloaden, alleen wegen met een limiet bewaren, het grote bestand meteen weggooien.
-      # Zo blijven schijf en geheugen klein, ook voor Duitsland en Frankrijk.
+      # Downloaden, alleen wegen met een limiet bewaren, het grote bestand meteen weggooien.
       - name: Kaarten downloaden en voorfilteren (Geofabrik)
         run: |
           mkdir -p osm
-          get() {   # get <naam> <geofabrik-pad>
-            curl -fsSL -o osm/raw.pbf "https://download.geofabrik.de/europe/$2-latest.osm.pbf"
+          n=0
+          for path in ${{ matrix.region.pbf }}; do
+            n=$((n+1))
+            curl -fsSL --retry 3 -o osm/raw.pbf "https://download.geofabrik.de/$path-latest.osm.pbf"
             osmium tags-filter osm/raw.pbf \
               w/highway=motorway,trunk,primary,secondary,tertiary,unclassified,residential,living_street,service,road,motorway_link,trunk_link,primary_link,secondary_link,tertiary_link \
               -o osm/roads.pbf --overwrite
             osmium tags-filter osm/roads.pbf w/maxspeed w/maxspeed:type w/source:maxspeed w/zone:maxspeed \
-              -o "osm/$1.pbf" --overwrite
+              -o "osm/part$n.pbf" --overwrite
             rm -f osm/raw.pbf osm/roads.pbf
-            ls -lh "osm/$1.pbf"
-          }
-          get nl netherlands
-          get be belgium
-          get de germany
-          get fr france
-          get es spain
-          get gb great-britain
-          get ie ireland-and-northern-ireland
-          df -h .
+          done
+          ls -lh osm
 
       - name: Tegels maken
         run: |
-          python make_tiles.py site nl=osm/nl.pbf be=osm/be.pbf de=osm/de.pbf fr=osm/fr.pbf es=osm/es.pbf \
-            uk=osm/gb.pbf uk=osm/ie.pbf
+          python make_tiles.py region "parts/${{ matrix.region.id }}" osm/part*.pbf
+          tar -czf "tiles-${{ matrix.region.id }}.tgz" -C parts "${{ matrix.region.id }}"
+          ls -lh "tiles-${{ matrix.region.id }}.tgz"
 
-      - name: Startpagina en vermelding
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tiles-${{ matrix.region.id }}
+          path: tiles-${{ matrix.region.id }}.tgz
+          retention-days: 2
+          compression-level: 0
+
+  merge:
+    needs: [plan, region]
+    if: ${{ !cancelled() }}     # ook als één regio mislukt: de rest gewoon publiceren
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tiles-*
+          merge-multiple: true
+          path: dl
+      - name: Samenvoegen
         run: |
+          mkdir -p parts
+          for f in dl/*.tgz; do tar -xzf "$f" -C parts; done
+          python3 make_tiles.py merge site packs regions.json "${{ needs.plan.outputs.site }}" parts
           cp README.md site/README.md
           printf '<!doctype html><meta charset="utf-8"><title>Drivr limieten</title><p>Snelheidslimieten voor de Drivr-app. Data: &copy; OpenStreetMap-bijdragers, ODbL.</p>' > site/index.html
-          du -sh site
+          du -sh site packs
           # GitHub Pages staat maximaal 1 GB toe
           size=$(du -sm site | cut -f1)
           echo "Totaal: ${size} MB"
           if [ "$size" -gt 980 ]; then echo "::error::Tegels zijn ${size} MB, meer dan GitHub Pages toestaat (1 GB)"; exit 1; fi
 
+      - name: Proefrun
+        if: ${{ inputs.only != '' }}
+        run: |
+          python3 -c "import json;m=json.load(open('site/manifest.json'));print(json.dumps(m,indent=1)[:3000])"
+          ls -l packs
+
+      - name: Downloadbestanden als release "data"
+        if: ${{ inputs.only == '' || inputs.only == null }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view data >/dev/null 2>&1 || gh release create data --title "Limietdata" \
+            --notes "Downloadbestanden per regio voor Drivr. Data: © OpenStreetMap-bijdragers, ODbL."
+          gh release upload data packs/*.dpk --clobber
+
       - uses: actions/upload-pages-artifact@v3
+        if: ${{ inputs.only == '' || inputs.only == null }}
         with:
           path: site
 
   deploy:
-    needs: build
+    needs: merge
+    if: ${{ inputs.only == '' || inputs.only == null }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages

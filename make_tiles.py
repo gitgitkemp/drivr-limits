@@ -2,13 +2,18 @@
 """Maakt Drivr-limiettegels uit een OpenStreetMap-extract (.osm.pbf).
 
 Gebruik:
-    python3 make_tiles.py out/ nl=netherlands.osm.pbf be=belgium.osm.pbf   # tegels maken
-    python3 make_tiles.py --selftest                                       # regels controleren
+    python3 make_tiles.py region parts/nl nl.pbf [meer.pbf ...]     # tegels van één regio
+    python3 make_tiles.py merge site/ packs/ regions.json eu parts/  # regio's van een site samenvoegen
+    python3 make_tiles.py out/ nl=netherlands.osm.pbf               # oud: alles in één keer
+    python3 make_tiles.py --selftest                                # regels controleren
 
-Uitvoer:
-    out/13/{x}/{y}.json      tegels in het formaat van docs/limietdata.md (landen samengevoegd)
-    out/index/{land}.json    welke tegels bij een land horen, voor de offline download in de app
-    out/meta.json            datum, aantallen, licentie
+Uitvoer van merge:
+    site/13/{x}/{y}.json     tegels in het formaat van docs/limietdata.md (regio's samengevoegd)
+    site/index/{id}.json     welke tegels bij een regio horen (app 1.0 gebruikt dit voor offline)
+    site/manifest.json       regio's van deze site: naam, groep, omtrek, grootte, downloadbestand
+    site/meta.json           datum, aantallen, licentie
+    packs/{id}.dpk           alle tegels van een regio in één bestand: regels "13/x/y<TAB>json",
+                             samen gecomprimeerd met DEFLATE (raw, zonder kop; Apple: .zlib)
 Draait normaal in GitHub Actions (.github/workflows/limits.yml), niet op je eigen computer.
 Vereist: pip install osmium   (pyosmium)
 Data: © OpenStreetMap-bijdragers, ODbL.
@@ -144,16 +149,12 @@ def split_per_tile(points):
     return pieces
 
 
-def build(out, sources):
-    """sources: lijst van (land, pad-naar-pbf). Land voor land, zodat het geheugen klein blijft."""
+def handler(tiles, stats):
+    """osmium-handler die wegen met een limiet per tegel verzamelt."""
     import osmium  # pas hier, zodat --selftest zonder pyosmium werkt
-    from datetime import date
-
-    stats = {"wegen": 0, "zonder_limiet": 0}
-    country_tiles = defaultdict(set)
 
     class Handler(osmium.SimpleHandler):
-        def __init__(self, tiles):
+        def __init__(self):
             super().__init__()
             self.tiles = tiles
 
@@ -179,9 +180,139 @@ def build(out, sources):
                     self.tiles[t].add(json.dumps([round(limit), name, encode_points(run)],
                                                  ensure_ascii=False, separators=(",", ":")))
 
+    return Handler()
+
+
+def write_tiles(out, tiles):
+    for (x, y), ways in tiles.items():
+        d = os.path.join(out, str(ZOOM), str(x))
+        os.makedirs(d, exist_ok=True)
+        path = os.path.join(d, f"{y}.json")
+        if os.path.exists(path):   # al gevuld (ander bestand van dezelfde regio): samenvoegen
+            with open(path, encoding="utf-8") as f:
+                ways |= {json.dumps(w, ensure_ascii=False, separators=(",", ":")) for w in json.load(f)["w"]}
+        with open(path, "w", encoding="utf-8") as f:
+            f.write('{"v":1,"w":[' + ",".join(sorted(ways)) + "]}")
+
+
+def read_ways(path):
+    with open(path, encoding="utf-8") as f:
+        return {json.dumps(w, ensure_ascii=False, separators=(",", ":")) for w in json.load(f)["w"]}
+
+
+def build_region(out, pbfs):
+    """Tegels van één regio (één of meer kaarten) naar out/13/x/y.json."""
+    stats = {"wegen": 0, "zonder_limiet": 0}
+    for pbf in pbfs:
+        tiles = defaultdict(set)
+        handler(tiles, stats).apply_file(pbf, locations=True, idx="flex_mem")
+        write_tiles(out, tiles)
+        print(pbf, len(tiles), "tegels", stats, flush=True)
+        del tiles
+    with open(os.path.join(out, "stats.json"), "w") as f:
+        json.dump(stats, f)
+
+
+def lon_of(x, z=ZOOM):
+    return x / (1 << z) * 360 - 180
+
+
+def lat_of(y, z=ZOOM):
+    return math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * y / (1 << z)))))
+
+
+def merge(site_dir, pack_dir, regions_path, site, parts_dir):
+    """Voegt de regio's van één site samen, maakt per regio een downloadbestand en het manifest."""
+    import zlib
+    from datetime import date
+
+    cfg = json.load(open(regions_path, encoding="utf-8"))
+    owner, sites = cfg["owner"], cfg["sites"]
+    mine = [r for r in cfg["regions"] if r["site"] == site]
+    today = date.today().isoformat()
+
+    # Welke regio's hebben welke tegel (alleen regio's die gelukt zijn)
+    region_tiles, users = {}, defaultdict(list)
+    for r in mine:
+        root = os.path.join(parts_dir, r["id"], str(ZOOM))
+        if not os.path.isdir(root):
+            print("ontbreekt:", r["id"], flush=True)
+            continue
+        paths = []
+        for x in os.listdir(root):
+            for fn in os.listdir(os.path.join(root, x)):
+                p = f"{ZOOM}/{x}/{fn[:-5]}"
+                paths.append(p)
+                users[p].append(r["id"])
+        region_tiles[r["id"]] = sorted(paths)
+
+    # Samenvoegen: een tegel op een grens krijgt de wegen van alle regio's
+    for p, ids in users.items():
+        dst = os.path.join(site_dir, p + ".json")
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        if len(ids) == 1:
+            os.replace(os.path.join(parts_dir, ids[0], p + ".json"), dst)
+        else:
+            ways = set()
+            for i in ids:
+                ways |= read_ways(os.path.join(parts_dir, i, p + ".json"))
+            with open(dst, "w", encoding="utf-8") as f:
+                f.write('{"v":1,"w":[' + ",".join(sorted(ways)) + "]}")
+
+    os.makedirs(os.path.join(site_dir, "index"), exist_ok=True)
+    os.makedirs(pack_dir, exist_ok=True)
+    listed = []
+    for r in mine:
+        paths = region_tiles.get(r["id"])
+        if not paths:
+            continue
+        size = sum(os.path.getsize(os.path.join(site_dir, p + ".json")) for p in paths)
+        with open(os.path.join(site_dir, "index", f"{r['id']}.json"), "w", encoding="utf-8") as f:
+            json.dump({"land": r["id"], "datum": today, "bytes": size, "tiles": paths}, f, separators=(",", ":"))
+        comp = zlib.compressobj(9, zlib.DEFLATED, -15)
+        with open(os.path.join(pack_dir, f"{r['id']}.dpk"), "wb") as out:
+            for p in paths:
+                with open(os.path.join(site_dir, p + ".json"), "rb") as f:
+                    out.write(comp.compress(p.encode() + b"\t" + f.read() + b"\n"))
+            out.write(comp.flush())
+        xs = [int(p.split("/")[1]) for p in paths]
+        ys = [int(p.split("/")[2]) for p in paths]
+        bbox = [round(lon_of(min(xs)), 4), round(lat_of(max(ys) + 1), 4),
+                round(lon_of(max(xs) + 1), 4), round(lat_of(min(ys)), 4)]
+        item = {"id": r["id"], "group": r["group"], "bbox": bbox, "tiles": len(paths), "bytes": size,
+                "pack": os.path.getsize(os.path.join(pack_dir, f"{r['id']}.dpk"))}
+        if r.get("name"):
+            item["name"] = r["name"]
+        listed.append(item)
+
+    manifest = {
+        "v": 2, "datum": today, "site": site,
+        "tiles": f"https://{owner}.github.io/{sites[site]}/",
+        "packs": f"https://github.com/{owner}/{sites[site]}/releases/download/data/",
+        "sites": {k: f"https://{owner}.github.io/{v}/" for k, v in sites.items()},
+        "regions": listed,
+        "licentie": "© OpenStreetMap-bijdragers, ODbL",
+    }
+    with open(os.path.join(site_dir, "manifest.json"), "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, separators=(",", ":"))
+    meta = {"zoom": ZOOM, "datum": today, "tegels": len(users),
+            "regios": {i: len(p) for i, p in region_tiles.items()},
+            "licentie": "© OpenStreetMap-bijdragers, ODbL"}
+    with open(os.path.join(site_dir, "meta.json"), "w", encoding="utf-8") as f:
+        json.dump(meta, f, ensure_ascii=False, indent=1)
+    print(json.dumps(meta, ensure_ascii=False))
+
+
+def build(out, sources):
+    """sources: lijst van (land, pad-naar-pbf). Land voor land, zodat het geheugen klein blijft."""
+    from datetime import date
+
+    stats = {"wegen": 0, "zonder_limiet": 0}
+    country_tiles = defaultdict(set)
+
     for country, pbf in sources:
         tiles = defaultdict(set)
-        Handler(tiles).apply_file(pbf, locations=True, idx="flex_mem")
+        handler(tiles, stats).apply_file(pbf, locations=True, idx="flex_mem")
         for (x, y), ways in tiles.items():
             d = os.path.join(out, str(ZOOM), str(x))
             os.makedirs(d, exist_ok=True)
@@ -244,6 +375,10 @@ def selftest():
 if __name__ == "__main__":
     if len(sys.argv) == 2 and sys.argv[1] == "--selftest":
         selftest()
+    elif len(sys.argv) >= 4 and sys.argv[1] == "region":
+        build_region(sys.argv[2], sys.argv[3:])
+    elif len(sys.argv) == 7 and sys.argv[1] == "merge":
+        merge(*sys.argv[2:7])
     elif len(sys.argv) >= 3 and all("=" in a for a in sys.argv[2:]):
         build(sys.argv[1], [tuple(a.split("=", 1)) for a in sys.argv[2:]])
     else:

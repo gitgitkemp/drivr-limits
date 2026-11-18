@@ -1,0 +1,1014 @@
+{
+ "owner": "gitgitkemp",
+ "sites": {
+  "eu": "drivr-limits",
+  "s2": "drivr-limits-2"
+ },
+ "regions": [
+  {
+   "id": "ad",
+   "group": "europe",
+   "name": "Andorra",
+   "pbf": [
+    "europe/andorra"
+   ],
+   "est": 0.1,
+   "site": "s2"
+  },
+  {
+   "id": "al",
+   "group": "europe",
+   "name": "Albania",
+   "pbf": [
+    "europe/albania"
+   ],
+   "est": 1.9,
+   "site": "s2"
+  },
+  {
+   "id": "at",
+   "group": "europe",
+   "name": "Austria",
+   "pbf": [
+    "europe/austria"
+   ],
+   "est": 27.7,
+   "site": "eu"
+  },
+  {
+   "id": "ba",
+   "group": "europe",
+   "name": "Bosnia-Herzegovina",
+   "pbf": [
+    "europe/bosnia-herzegovina"
+   ],
+   "est": 5.5,
+   "site": "s2"
+  },
+  {
+   "id": "be",
+   "group": "europe",
+   "pbf": [
+    "europe/belgium"
+   ],
+   "est": 23.8,
+   "site": "eu"
+  },
+  {
+   "id": "bg",
+   "group": "europe",
+   "name": "Bulgaria",
+   "pbf": [
+    "europe/bulgaria"
+   ],
+   "est": 6.0,
+   "site": "s2"
+  },
+  {
+   "id": "by",
+   "group": "europe",
+   "name": "Belarus",
+   "pbf": [
+    "europe/belarus"
+   ],
+   "est": 12.0,
+   "site": "s2"
+  },
+  {
+   "id": "ch",
+   "group": "europe",
+   "name": "Switzerland",
+   "pbf": [
+    "europe/switzerland"
+   ],
+   "est": 18.7,
+   "site": "s2"
+  },
+  {
+   "id": "cy",
+   "group": "europe",
+   "name": "Cyprus",
+   "pbf": [
+    "europe/cyprus"
+   ],
+   "est": 1.3,
+   "site": "s2"
+  },
+  {
+   "id": "cz",
+   "group": "europe",
+   "name": "Czech Republic",
+   "pbf": [
+    "europe/czech-republic"
+   ],
+   "est": 32.4,
+   "site": "s2"
+  },
+  {
+   "id": "de",
+   "group": "europe",
+   "pbf": [
+    "europe/germany"
+   ],
+   "est": 166.1,
+   "site": "eu"
+  },
+  {
+   "id": "dk",
+   "group": "europe",
+   "name": "Denmark",
+   "pbf": [
+    "europe/denmark"
+   ],
+   "est": 16.9,
+   "site": "s2"
+  },
+  {
+   "id": "ee",
+   "group": "europe",
+   "name": "Estonia",
+   "pbf": [
+    "europe/estonia"
+   ],
+   "est": 4.2,
+   "site": "s2"
+  },
+  {
+   "id": "es",
+   "group": "europe",
+   "pbf": [
+    "europe/spain"
+   ],
+   "est": 51.1,
+   "site": "eu"
+  },
+  {
+   "id": "fi",
+   "group": "europe",
+   "name": "Finland",
+   "pbf": [
+    "europe/finland"
+   ],
+   "est": 26.4,
+   "site": "s2"
+  },
+  {
+   "id": "fo",
+   "group": "europe",
+   "name": "Faroe Islands",
+   "pbf": [
+    "europe/faroe-islands"
+   ],
+   "est": 0.3,
+   "site": "s2"
+  },
+  {
+   "id": "fr",
+   "group": "europe",
+   "pbf": [
+    "europe/france"
+   ],
+   "est": 174.0,
+   "site": "eu"
+  },
+  {
+   "id": "ge",
+   "group": "europe",
+   "name": "Georgia",
+   "pbf": [
+    "europe/georgia"
+   ],
+   "est": 3.5,
+   "site": "s2"
+  },
+  {
+   "id": "gg",
+   "group": "europe",
+   "name": "Guernsey and Jersey",
+   "pbf": [
+    "europe/guernsey-jersey"
+   ],
+   "est": 0.1,
+   "site": "s2"
+  },
+  {
+   "id": "gr",
+   "group": "europe",
+   "name": "Greece",
+   "pbf": [
+    "europe/greece"
+   ],
+   "est": 11.7,
+   "site": "s2"
+  },
+  {
+   "id": "hr",
+   "group": "europe",
+   "name": "Croatia",
+   "pbf": [
+    "europe/croatia"
+   ],
+   "est": 6.9,
+   "site": "s2"
+  },
+  {
+   "id": "hu",
+   "group": "europe",
+   "name": "Hungary",
+   "pbf": [
+    "europe/hungary"
+   ],
+   "est": 11.2,
+   "site": "s2"
+  },
+  {
+   "id": "im",
+   "group": "europe",
+   "name": "Isle of Man",
+   "pbf": [
+    "europe/isle-of-man"
+   ],
+   "est": 0.2,
+   "site": "s2"
+  },
+  {
+   "id": "is",
+   "group": "europe",
+   "name": "Iceland",
+   "pbf": [
+    "europe/iceland"
+   ],
+   "est": 2.2,
+   "site": "eu"
+  },
+  {
+   "id": "it",
+   "group": "europe",
+   "name": "Italy",
+   "pbf": [
+    "europe/italy"
+   ],
+   "est": 76.6,
+   "site": "eu"
+  },
+  {
+   "id": "li",
+   "group": "europe",
+   "name": "Liechtenstein",
+   "pbf": [
+    "europe/liechtenstein"
+   ],
+   "est": 0.1,
+   "site": "s2"
+  },
+  {
+   "id": "lt",
+   "group": "europe",
+   "name": "Lithuania",
+   "pbf": [
+    "europe/lithuania"
+   ],
+   "est": 7.6,
+   "site": "s2"
+  },
+  {
+   "id": "lu",
+   "group": "europe",
+   "name": "Luxembourg",
+   "pbf": [
+    "europe/luxembourg"
+   ],
+   "est": 1.6,
+   "site": "s2"
+  },
+  {
+   "id": "lv",
+   "group": "europe",
+   "name": "Latvia",
+   "pbf": [
+    "europe/latvia"
+   ],
+   "est": 4.8,
+   "site": "s2"
+  },
+  {
+   "id": "mc",
+   "group": "europe",
+   "name": "Monaco",
+   "pbf": [
+    "europe/monaco"
+   ],
+   "est": 0.0,
+   "site": "eu"
+  },
+  {
+   "id": "md",
+   "group": "europe",
+   "name": "Moldova",
+   "pbf": [
+    "europe/moldova"
+   ],
+   "est": 3.5,
+   "site": "s2"
+  },
+  {
+   "id": "me",
+   "group": "europe",
+   "name": "Montenegro",
+   "pbf": [
+    "europe/montenegro"
+   ],
+   "est": 1.2,
+   "site": "s2"
+  },
+  {
+   "id": "mk",
+   "group": "europe",
+   "name": "Macedonia",
+   "pbf": [
+    "europe/macedonia"
+   ],
+   "est": 1.0,
+   "site": "s2"
+  },
+  {
+   "id": "mt",
+   "group": "europe",
+   "name": "Malta",
+   "pbf": [
+    "europe/malta"
+   ],
+   "est": 0.3,
+   "site": "s2"
+  },
+  {
+   "id": "nl",
+   "group": "europe",
+   "pbf": [
+    "europe/netherlands"
+   ],
+   "est": 48.0,
+   "site": "eu"
+  },
+  {
+   "id": "no",
+   "group": "europe",
+   "name": "Norway",
+   "pbf": [
+    "europe/norway"
+   ],
+   "est": 46.9,
+   "site": "eu"
+  },
+  {
+   "id": "pl",
+   "group": "europe",
+   "name": "Poland",
+   "pbf": [
+    "europe/poland"
+   ],
+   "est": 72.1,
+   "site": "eu"
+  },
+  {
+   "id": "pt",
+   "group": "europe",
+   "name": "Portugal",
+   "pbf": [
+    "europe/portugal"
+   ],
+   "est": 14.6,
+   "site": "s2"
+  },
+  {
+   "id": "pt-20",
+   "group": "europe",
+   "name": "Azores",
+   "pbf": [
+    "europe/azores"
+   ],
+   "est": 0.6,
+   "site": "s2"
+  },
+  {
+   "id": "ro",
+   "group": "europe",
+   "name": "Romania",
+   "pbf": [
+    "europe/romania"
+   ],
+   "est": 11.3,
+   "site": "s2"
+  },
+  {
+   "id": "rs",
+   "group": "europe",
+   "name": "Serbia",
+   "pbf": [
+    "europe/serbia"
+   ],
+   "est": 8.2,
+   "site": "s2"
+  },
+  {
+   "id": "se",
+   "group": "europe",
+   "name": "Sweden",
+   "pbf": [
+    "europe/sweden"
+   ],
+   "est": 33.5,
+   "site": "eu"
+  },
+  {
+   "id": "si",
+   "group": "europe",
+   "name": "Slovenia",
+   "pbf": [
+    "europe/slovenia"
+   ],
+   "est": 10.7,
+   "site": "s2"
+  },
+  {
+   "id": "sk",
+   "group": "europe",
+   "name": "Slovakia",
+   "pbf": [
+    "europe/slovakia"
+   ],
+   "est": 11.9,
+   "site": "s2"
+  },
+  {
+   "id": "tr",
+   "group": "europe",
+   "name": "Turkey",
+   "pbf": [
+    "europe/turkey"
+   ],
+   "est": 22.2,
+   "site": "s2"
+  },
+  {
+   "id": "ua",
+   "group": "europe",
+   "name": "Ukraine (with Crimea)",
+   "pbf": [
+    "europe/ukraine"
+   ],
+   "est": 30.1,
+   "site": "s2"
+  },
+  {
+   "id": "uk",
+   "group": "europe",
+   "pbf": [
+    "europe/great-britain",
+    "europe/ireland-and-northern-ireland"
+   ],
+   "est": 77.8,
+   "site": "eu"
+  },
+  {
+   "id": "xk",
+   "group": "europe",
+   "name": "Kosovo",
+   "pbf": [
+    "europe/kosovo"
+   ],
+   "est": 1.0,
+   "site": "s2"
+  },
+  {
+   "id": "us-ak",
+   "group": "us",
+   "name": "Alaska",
+   "pbf": [
+    "north-america/us/alaska"
+   ],
+   "est": 4.9,
+   "site": "s2"
+  },
+  {
+   "id": "us-al",
+   "group": "us",
+   "name": "Alabama",
+   "pbf": [
+    "north-america/us/alabama"
+   ],
+   "est": 5.2,
+   "site": "s2"
+  },
+  {
+   "id": "us-ar",
+   "group": "us",
+   "name": "Arkansas",
+   "pbf": [
+    "north-america/us/arkansas"
+   ],
+   "est": 3.4,
+   "site": "s2"
+  },
+  {
+   "id": "us-az",
+   "group": "us",
+   "name": "Arizona",
+   "pbf": [
+    "north-america/us/arizona"
+   ],
+   "est": 10.4,
+   "site": "s2"
+  },
+  {
+   "id": "us-ca",
+   "group": "us",
+   "name": "California",
+   "pbf": [
+    "north-america/us/california"
+   ],
+   "est": 45.4,
+   "site": "s2"
+  },
+  {
+   "id": "us-co",
+   "group": "us",
+   "name": "Colorado",
+   "pbf": [
+    "north-america/us/colorado"
+   ],
+   "est": 13.2,
+   "site": "s2"
+  },
+  {
+   "id": "us-ct",
+   "group": "us",
+   "name": "Connecticut",
+   "pbf": [
+    "north-america/us/connecticut"
+   ],
+   "est": 7.4,
+   "site": "s2"
+  },
+  {
+   "id": "us-dc",
+   "group": "us",
+   "name": "District of Columbia",
+   "pbf": [
+    "north-america/us/district-of-columbia"
+   ],
+   "est": 0.7,
+   "site": "s2"
+  },
+  {
+   "id": "us-de",
+   "group": "us",
+   "name": "Delaware",
+   "pbf": [
+    "north-america/us/delaware"
+   ],
+   "est": 0.8,
+   "site": "s2"
+  },
+  {
+   "id": "us-fl",
+   "group": "us",
+   "name": "Florida",
+   "pbf": [
+    "north-america/us/florida"
+   ],
+   "est": 22.5,
+   "site": "s2"
+  },
+  {
+   "id": "us-ga",
+   "group": "us",
+   "name": "Georgia",
+   "pbf": [
+    "north-america/us/georgia"
+   ],
+   "est": 12.2,
+   "site": "s2"
+  },
+  {
+   "id": "us-hi",
+   "group": "us",
+   "name": "Hawaii",
+   "pbf": [
+    "north-america/us/hawaii"
+   ],
+   "est": 0.9,
+   "site": "s2"
+  },
+  {
+   "id": "us-ia",
+   "group": "us",
+   "name": "Iowa",
+   "pbf": [
+    "north-america/us/iowa"
+   ],
+   "est": 4.6,
+   "site": "s2"
+  },
+  {
+   "id": "us-id",
+   "group": "us",
+   "name": "Idaho",
+   "pbf": [
+    "north-america/us/idaho"
+   ],
+   "est": 4.4,
+   "site": "s2"
+  },
+  {
+   "id": "us-il",
+   "group": "us",
+   "name": "Illinois",
+   "pbf": [
+    "north-america/us/illinois"
+   ],
+   "est": 12.4,
+   "site": "s2"
+  },
+  {
+   "id": "us-in",
+   "group": "us",
+   "name": "Indiana",
+   "pbf": [
+    "north-america/us/indiana"
+   ],
+   "est": 6.9,
+   "site": "s2"
+  },
+  {
+   "id": "us-ks",
+   "group": "us",
+   "name": "Kansas",
+   "pbf": [
+    "north-america/us/kansas"
+   ],
+   "est": 4.0,
+   "site": "s2"
+  },
+  {
+   "id": "us-ky",
+   "group": "us",
+   "name": "Kentucky",
+   "pbf": [
+    "north-america/us/kentucky"
+   ],
+   "est": 5.3,
+   "site": "s2"
+  },
+  {
+   "id": "us-la",
+   "group": "us",
+   "name": "Louisiana",
+   "pbf": [
+    "north-america/us/louisiana"
+   ],
+   "est": 5.0,
+   "site": "s2"
+  },
+  {
+   "id": "us-ma",
+   "group": "us",
+   "name": "Massachusetts",
+   "pbf": [
+    "north-america/us/massachusetts"
+   ],
+   "est": 10.6,
+   "site": "s2"
+  },
+  {
+   "id": "us-md",
+   "group": "us",
+   "name": "Maryland",
+   "pbf": [
+    "north-america/us/maryland"
+   ],
+   "est": 7.4,
+   "site": "s2"
+  },
+  {
+   "id": "us-me",
+   "group": "us",
+   "name": "Maine",
+   "pbf": [
+    "north-america/us/maine"
+   ],
+   "est": 3.1,
+   "site": "s2"
+  },
+  {
+   "id": "us-mi",
+   "group": "us",
+   "name": "Michigan",
+   "pbf": [
+    "north-america/us/michigan"
+   ],
+   "est": 10.8,
+   "site": "s2"
+  },
+  {
+   "id": "us-mn",
+   "group": "us",
+   "name": "Minnesota",
+   "pbf": [
+    "north-america/us/minnesota"
+   ],
+   "est": 9.9,
+   "site": "s2"
+  },
+  {
+   "id": "us-mo",
+   "group": "us",
+   "name": "Missouri",
+   "pbf": [
+    "north-america/us/missouri"
+   ],
+   "est": 6.8,
+   "site": "s2"
+  },
+  {
+   "id": "us-ms",
+   "group": "us",
+   "name": "Mississippi",
+   "pbf": [
+    "north-america/us/mississippi"
+   ],
+   "est": 3.2,
+   "site": "s2"
+  },
+  {
+   "id": "us-mt",
+   "group": "us",
+   "name": "Montana",
+   "pbf": [
+    "north-america/us/montana"
+   ],
+   "est": 3.5,
+   "site": "s2"
+  },
+  {
+   "id": "us-nc",
+   "group": "us",
+   "name": "North Carolina",
+   "pbf": [
+    "north-america/us/north-carolina"
+   ],
+   "est": 14.7,
+   "site": "s2"
+  },
+  {
+   "id": "us-nd",
+   "group": "us",
+   "name": "North Dakota",
+   "pbf": [
+    "north-america/us/north-dakota"
+   ],
+   "est": 4.4,
+   "site": "s2"
+  },
+  {
+   "id": "us-ne",
+   "group": "us",
+   "name": "Nebraska",
+   "pbf": [
+    "north-america/us/nebraska"
+   ],
+   "est": 3.5,
+   "site": "s2"
+  },
+  {
+   "id": "us-nh",
+   "group": "us",
+   "name": "New Hampshire",
+   "pbf": [
+    "north-america/us/new-hampshire"
+   ],
+   "est": 2.5,
+   "site": "s2"
+  },
+  {
+   "id": "us-nj",
+   "group": "us",
+   "name": "New Jersey",
+   "pbf": [
+    "north-america/us/new-jersey"
+   ],
+   "est": 5.6,
+   "site": "s2"
+  },
+  {
+   "id": "us-nm",
+   "group": "us",
+   "name": "New Mexico",
+   "pbf": [
+    "north-america/us/new-mexico"
+   ],
+   "est": 4.7,
+   "site": "s2"
+  },
+  {
+   "id": "us-nv",
+   "group": "us",
+   "name": "Nevada",
+   "pbf": [
+    "north-america/us/nevada"
+   ],
+   "est": 4.2,
+   "site": "s2"
+  },
+  {
+   "id": "us-ny",
+   "group": "us",
+   "name": "New York",
+   "pbf": [
+    "north-america/us/new-york"
+   ],
+   "est": 17.0,
+   "site": "s2"
+  },
+  {
+   "id": "us-oh",
+   "group": "us",
+   "name": "Ohio",
+   "pbf": [
+    "north-america/us/ohio"
+   ],
+   "est": 11.1,
+   "site": "s2"
+  },
+  {
+   "id": "us-ok",
+   "group": "us",
+   "name": "Oklahoma",
+   "pbf": [
+    "north-america/us/oklahoma"
+   ],
+   "est": 5.8,
+   "site": "s2"
+  },
+  {
+   "id": "us-or",
+   "group": "us",
+   "name": "Oregon",
+   "pbf": [
+    "north-america/us/oregon"
+   ],
+   "est": 8.7,
+   "site": "s2"
+  },
+  {
+   "id": "us-pa",
+   "group": "us",
+   "name": "Pennsylvania",
+   "pbf": [
+    "north-america/us/pennsylvania"
+   ],
+   "est": 11.9,
+   "site": "s2"
+  },
+  {
+   "id": "us-pr",
+   "group": "us",
+   "name": "Puerto Rico",
+   "pbf": [
+    "north-america/us/puerto-rico"
+   ],
+   "est": 2.5,
+   "site": "s2"
+  },
+  {
+   "id": "us-ri",
+   "group": "us",
+   "name": "Rhode Island",
+   "pbf": [
+    "north-america/us/rhode-island"
+   ],
+   "est": 1.8,
+   "site": "s2"
+  },
+  {
+   "id": "us-sc",
+   "group": "us",
+   "name": "South Carolina",
+   "pbf": [
+    "north-america/us/south-carolina"
+   ],
+   "est": 5.7,
+   "site": "s2"
+  },
+  {
+   "id": "us-sd",
+   "group": "us",
+   "name": "South Dakota",
+   "pbf": [
+    "north-america/us/south-dakota"
+   ],
+   "est": 1.7,
+   "site": "s2"
+  },
+  {
+   "id": "us-tn",
+   "group": "us",
+   "name": "Tennessee",
+   "pbf": [
+    "north-america/us/tennessee"
+   ],
+   "est": 6.5,
+   "site": "s2"
+  },
+  {
+   "id": "us-tx",
+   "group": "us",
+   "name": "Texas",
+   "pbf": [
+    "north-america/us/texas"
+   ],
+   "est": 24.8,
+   "site": "s2"
+  },
+  {
+   "id": "us-ut",
+   "group": "us",
+   "name": "Utah",
+   "pbf": [
+    "north-america/us/utah"
+   ],
+   "est": 5.9,
+   "site": "s2"
+  },
+  {
+   "id": "us-va",
+   "group": "us",
+   "name": "Virginia",
+   "pbf": [
+    "north-america/us/virginia"
+   ],
+   "est": 14.6,
+   "site": "s2"
+  },
+  {
+   "id": "us-vi",
+   "group": "us",
+   "name": "U.S. Virgin Islands",
+   "pbf": [
+    "north-america/us/us-virgin-islands"
+   ],
+   "est": 0.1,
+   "site": "s2"
+  },
+  {
+   "id": "us-vt",
+   "group": "us",
+   "name": "Vermont",
+   "pbf": [
+    "north-america/us/vermont"
+   ],
+   "est": 1.6,
+   "site": "s2"
+  },
+  {
+   "id": "us-wa",
+   "group": "us",
+   "name": "Washington",
+   "pbf": [
+    "north-america/us/washington"
+   ],
+   "est": 12.4,
+   "site": "s2"
+  },
+  {
+   "id": "us-wi",
+   "group": "us",
+   "name": "Wisconsin",
+   "pbf": [
+    "north-america/us/wisconsin"
+   ],
+   "est": 10.1,
+   "site": "s2"
+  },
+  {
+   "id": "us-wv",
+   "group": "us",
+   "name": "West Virginia",
+   "pbf": [
+    "north-america/us/west-virginia"
+   ],
+   "est": 3.4,
+   "site": "s2"
+  },
+  {
+   "id": "us-wy",
+   "group": "us",
+   "name": "Wyoming",
+   "pbf": [
+    "north-america/us/wyoming"
+   ],
+   "est": 3.3,
+   "site": "s2"
+  }
+ ]
+}
